@@ -140,7 +140,7 @@ class MaskDetection(App):
             print("OAK-1 detected, app won't display spatial coordinates")
             face_det_nn = pipeline.create(dai.node.MobileNetDetectionNetwork)
 
-        face_det_nn.setConfidenceThreshold(0.5)
+        face_det_nn.setConfidenceThreshold(self.detect_threshold)
         face_det_nn.setBlobPath(blobconverter.from_zoo(name="face-detection-retail-0004", shaves=6))
         face_det_manip.out.link(face_det_nn.input)
 
