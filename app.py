@@ -13,13 +13,25 @@ if IS_INTERACTIVE:
     import cv2
 
 
+def frame_norm(frame, bbox):
+    normVals = np.full(len(bbox), frame.shape[0])
+    normVals[::2] = frame.shape[1]
+    return (np.clip(np.array(bbox), 0, 1) * normVals).astype(int)
+
+
+def log_softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return np.log(e_x / e_x.sum())
+
+
 class MaskDetection(App):
     def on_initialize(self, devices: List[dai.DeviceInfo]):
         self.msgs = {}
+        self.detect_threshold = 0.5
 
     def on_configuration(self, old_configuration: Config):
-        self.msgs = {}
-        self.detect_threshold = 0.5
+        print("Configuration update", self.config.values())
+        self.detect_threshold = self.config.self.detect_threshold
 
     def on_setup(self, device: Device):
         self.stereo = 1 < len(device.cameras)
@@ -42,11 +54,11 @@ class MaskDetection(App):
                     recognitions = msgs["recognition"]
 
                     for i, detection in enumerate(detections):
-                        bbox = self.frame_norm(frame, (detection.xmin, detection.ymin, detection.xmax, detection.ymax))
+                        bbox = frame_norm(frame, (detection.xmin, detection.ymin, detection.xmax, detection.ymax))
 
                         # Decoding of recognition results
                         rec = recognitions[i].getFirstLayerFp16()
-                        index = np.argmax(self.log_softmax(rec))
+                        index = np.argmax(log_softmax(rec))
                         text = "No Mask"
                         color = (0, 0, 255)  # Red
                         if index == 1:
@@ -81,7 +93,7 @@ class MaskDetection(App):
                     for i, detection in enumerate(detections):
                         # Decoding of recognition results
                         rec = recognitions[i].getFirstLayerFp16()
-                        index = np.argmax(self.log_softmax(rec))
+                        index = np.argmax(log_softmax(rec))
                         text = "No Mask"
                         if index == 1:
                             text = "Mask"
@@ -249,15 +261,6 @@ class MaskDetection(App):
         recognition_nn.out.link(recognition_xout.input)
 
         return pipeline
-
-    def log_softmax(self, x):
-        e_x = np.exp(x - np.max(x))
-        return np.log(e_x / e_x.sum())
-
-    def frame_norm(self, frame, bbox):
-        normVals = np.full(len(bbox), frame.shape[0])
-        normVals[::2] = frame.shape[1]
-        return (np.clip(np.array(bbox), 0, 1) * normVals).astype(int)
 
     def _run_pipelines(self, devices: List[dai.DeviceInfo]) -> Generator[bool, None, None]:
         for device in self.devices:
