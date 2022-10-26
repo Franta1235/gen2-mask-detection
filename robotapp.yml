@@ -1,5 +1,5 @@
 version: 1.0.1
-image: luxonis/age-gender-recognition
+image: luxonis/basic-app
 name: Mask Detection
 description: Detection of mask on face
 url: https://github.com/Franta1235/gen2-mask-detection

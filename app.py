@@ -1,5 +1,4 @@
 from contextlib import ExitStack
-from datetime import timedelta
 import depthai as dai
 import numpy as np
 import blobconverter
@@ -8,7 +7,6 @@ from typing import List, Generator
 from robothub_sdk.device import Device
 from MultiMsgSync import TwoStageHostSeqSync
 
-# IS_INTERACTIVE = False
 if IS_INTERACTIVE:
     import cv2
 
@@ -79,7 +77,7 @@ class MaskDetection(App):
                 if cv2.waitKey(1) == ord('q'):
                     self.stop()
         else:
-            # Report in Robothub console
+            # Report some info in Robothub console
             for device in self.devices:
                 for name, q in self.queues.items():
                     # Add all msgs (color frames, object detections and recognitions) to the Sync class.
@@ -288,38 +286,6 @@ class MaskDetection(App):
                 dai_device.setLogLevel(dai.LogLevel.WARN)
                 dai_device.setLogOutputLevel(dai.LogLevel.WARN)
 
-                """
-                self._comm.report_device(device)
-                for stream in device.streams.inputs():
-                    queue = dai_device.getInputQueue(stream.input_queue_name, maxSize=1, blocking=False)
-                    stream.register_queue(queue)
-                """
-
-                """
-                for stream in device.streams.outputs():
-                    print(stream.published.output_queue_name)
-                    consumed_queue = dai_device.getOutputQueue(stream.output_queue_name, maxSize=2, blocking=False) if stream.is_consumed else None
-                    published_queue = None
-                    if stream.is_published:
-                        published_queue = consumed_queue
-                        if stream.published.output_queue_name != stream.output_queue_name:
-                            published_queue = dai_device.getOutputQueue(stream.published.output_queue_name, maxSize=2, blocking=False)
-
-                    if published_queue:
-                        if stream.published.type == StreamType.ENCODED:
-                            self._comm.add_video_stream(stream.published)
-                            published_queue.addCallback(partial(self._comm.send_stream, stream.published))
-                        elif stream.published.type == StreamType.STATISTICS:
-                            published_queue.addCallback(partial(self._comm.send_statistics, device_id))
-                        else:
-                            raise RobotHubFatalException("Published stream is not supported")
-
-                    if consumed_queue:
-                        if stream.rate > 0:
-                            self._min_update_rate = min(self._min_update_rate, 1 / stream.rate)
-                        consumed_queue.addCallback(stream.queue_callback)
-                """
-
                 for name in ["color", "detection", "recognition"]:
                     self.queues[name] = dai_device.getOutputQueue(name)
 
@@ -327,31 +293,6 @@ class MaskDetection(App):
 
             while self.running:
                 self.on_update()
-
-            """
-            self._comm.report_online()
-            last_run = 0
-            while self.running:
-                had_items = False
-                now = time.monotonic()
-                for device in self.devices:
-                    # NOTE: needs depthai>=2.17.4
-                    if device.internal.isClosed():
-                        raise RuntimeError(f"Device {device.id} / {device.name} disconnected.")
-                    last_item = 0
-                    for stream in device.streams.outputs():
-                        last_item = max(last_item, stream.last_timestamp)
-                        if stream.last_timestamp > last_run:
-                            had_items = True
-                    if last_item > 0 and now - last_item > STREAM_STUCK_TIMEOUT:
-                        # NOTE(michal) temporary measure before we figure out how to fix this
-                        raise RuntimeError(f"Device {device.id} / {device.name} stuck. Last message received {now - last_item}s ago.")
-
-                if had_items:
-                    self.on_update()
-                last_run = now
-                yield had_items
-            """
 
 
 app = MaskDetection()
