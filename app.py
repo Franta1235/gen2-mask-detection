@@ -18,7 +18,8 @@ class MaskDetection(App):
         self.msgs = {}
 
     def on_configuration(self, old_configuration: Config):
-        pass
+        self.msgs = {}
+        self.detect_threshold = 0.5
 
     def on_setup(self, device: Device):
         self.stereo = 1 < len(device.cameras)
