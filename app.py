@@ -31,7 +31,7 @@ class MaskDetection(App):
 
     def on_configuration(self, old_configuration: Config):
         print("Configuration update", self.config.values())
-        self.detect_threshold = self.config.self.detect_threshold
+        self.detect_threshold = self.config.detect_threshold
 
     def on_setup(self, device: Device):
         self.stereo = 1 < len(device.cameras)
@@ -79,6 +79,7 @@ class MaskDetection(App):
                 if cv2.waitKey(1) == ord('q'):
                     self.stop()
         else:
+            # Report in Robothub console
             for device in self.devices:
                 for name, q in self.queues.items():
                     # Add all msgs (color frames, object detections and recognitions) to the Sync class.
