@@ -2,7 +2,7 @@ version: 1.0.1
 image: luxonis/age-gender-recognition
 name: Mask Detection
 description: Detection of mask on face
-url: https://github.com/slavivo/age-gender_v2
+url: https://github.com/Franta1235/gen2-mask-detection
 language: python
 configuration:
   detect_threshold:
